@@ -1,0 +1,52 @@
+- name: Launch EC2 Instances for Configuring Kubernetes Cluster.
+  hosts: localhost
+  vars_files: 
+       - Secure.yml
+  tasks: 
+  - name: Launch EC2 Instance For Setting Up Kubernetes Master Node.
+    ec2:
+      key_name: "AWS_Ansible_Key"
+      instance_type: "t2.micro"
+      image: "ami-0bcf5425cdc1d8a85"
+      wait: yes
+      count: 1
+      vpc_subnet_id: "subnet-c8121ea0"
+      region: "ap-south-1"
+      state: present
+      group_id: "sg-f3492997"
+      assign_public_ip: yes
+      instance_tags:
+        Name: "Master"
+      aws_access_key: "{{access_key}}"
+      aws_secret_key: "{{secret_key}}"
+    register: Master
+
+  - name: Launch EC2 Instance For Setting Up Kubernetes Slave.
+    ec2:
+      key_name: "AWS_Ansible_Key"
+      instance_type: "t2.micro"
+      image: "ami-0bcf5425cdc1d8a85"
+      wait: yes
+      count: 1
+      vpc_subnet_id: "subnet-c8121ea0"
+      region: "ap-south-1"
+      state: present
+      group_id: "sg-f3492997"
+      assign_public_ip: yes
+      instance_tags:
+        Name: "Slave"
+      aws_access_key: "{{access_key}}"
+      aws_secret_key: "{{secret_key}}" 
+    register: Slave                                                                                                                               
+
+  - name: Update Inventory File
+    blockinfile:
+              dest: "/etc/hosts.txt"
+              block: |
+                        [Master]
+                        {{ Master.instances[0].public_ip }} ansible_ssh_user=ec2-user ansible_ssh_private_key_file=/etc/ansible/AWS_Ansible_Key.pem
+                          
+                        [Slave]
+                        {{ Slave.instances[0].public_ip }} ansible_ssh_user=ec2-user ansible_ssh_private_key_file=/etc/ansible/AWS_Ansible_Key.pem
+
+                  

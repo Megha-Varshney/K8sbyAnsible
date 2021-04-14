@@ -1,0 +1,9 @@
+- hosts: Master
+  roles:
+         - name: "Configuring Master"
+           role: "Master"
+
+- hosts: Slave
+  roles: 
+          - name: "Configuring Slave"
+            role: "Slave"
